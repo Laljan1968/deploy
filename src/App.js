@@ -1,14 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
+const songs = [
+  'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+  'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+  'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+  'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
+  'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+  'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3',
+  'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3',
+  'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3',
+  'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3',
+  'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3',
+  'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3'
+];
+
 function App() {
-  // State to manage the play/pause status and track time
   const [isPlaying, setIsPlaying] = useState(false);
-  const [audio] = useState(new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'));
+  const [currentSongIndex, setCurrentSongIndex] = useState(0);
+  const [audio, setAudio] = useState(new Audio(songs[currentSongIndex]));
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
-  // Toggle play/pause
   const togglePlay = () => {
     if (isPlaying) {
       audio.pause();
@@ -18,43 +31,58 @@ function App() {
     setIsPlaying(!isPlaying);
   };
 
-  // Handle audio time update
-  const handleTimeUpdate = () => {
-    setCurrentTime(audio.currentTime);
+  const nextPlay = () => {
+    audio.pause();
+    const nextIndex = (currentSongIndex + 1) % songs.length;
+    const newAudio = new Audio(songs[nextIndex]);
+    setAudio(newAudio);
+    setCurrentSongIndex(nextIndex);
+    newAudio.play();
+    setIsPlaying(true);
   };
 
-  // Handle audio loaded metadata (for duration)
-  const handleLoadedMetadata = () => {
-    setDuration(audio.duration);
+  const prevPlay = () => {
+    audio.pause();
+    const prevIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+    const newAudio = new Audio(songs[prevIndex]);
+    setAudio(newAudio);
+    setCurrentSongIndex(prevIndex);
+    newAudio.play();
+    setIsPlaying(true);
   };
 
-  // Handle seeking (change current time of the audio)
-  const handleSeek = (e) => {
-    const newTime = (e.target.value / 100) * duration;
-    audio.currentTime = newTime;
-    setCurrentTime(newTime);
-  };
+  useEffect(() => {
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+    };
 
-  // Event listeners for time updates
-  React.useEffect(() => {
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration);
+    };
+
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
 
-    // Clean up on component unmount
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
     };
   }, [audio]);
 
+  const handleSeek = (e) => {
+    const newTime = (e.target.value / 100) * duration;
+    audio.currentTime = newTime;
+    setCurrentTime(newTime);
+  };
+
   return (
     <div className="App">
       <h1>React Audio Player</h1>
       <div className="audio-player">
-        <button onClick={togglePlay}>
-          {isPlaying ? 'Pause' : 'Play'}
-        </button>
-        <div className="time">
+        <div className="controls">
+          <button onClick={prevPlay}>Prev</button>
+          <button onClick={togglePlay}>{isPlaying ? 'Pause' : 'Play'}</button>
+          <button onClick={nextPlay}>Next</button>
           <span>{Math.floor(currentTime)} / {Math.floor(duration)}</span>
         </div>
         <input
@@ -68,3 +96,5 @@ function App() {
     </div>
   );
 }
+
+export default App;
